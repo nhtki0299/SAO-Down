@@ -1,0 +1,6 @@
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+requests>=2.31.0
+instaloader>=4.10.0
+yt-dlp>=2024.08.06
+pydantic>=2.0.0

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Sword Art Stream - SAO VRMMORPG Media & Photo Downloader</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=sao-mobile-1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="theme-kob">
+    <!-- SAO VRMMORPG "LINK START" Game Login Intro Screen -->
+    <div id="linkStartOverlay" class="sao-link-start-overlay">
+        <div class="link-start-tunnel">
+            <div class="tunnel-ring r1"></div>
+            <div class="tunnel-ring r2"></div>
+            <div class="tunnel-ring r3"></div>
+            <div class="tunnel-ring r4"></div>
+            <div class="tunnel-core-burst"></div>
+        </div>
+        <div class="link-start-content">
+            <div class="link-start-emblem">
+                <img src="/static/asuna_avatar.jpg" alt="Asuna Yuuki" class="link-start-asuna-portrait">
+                <div class="emblem-laser-circle"></div>
+                <div class="emblem-laser-circle c2"></div>
+            </div>
+            <div class="link-start-glitch-title" data-text="LINK START">LINK START</div>
+            <div class="link-start-sub">VRMMORPG INTERFACE // SYSTEM AUTHENTICATION</div>
+            <div class="link-start-status-line">
+                <span class="status-cursor">></span>
+                <span id="linkStartLog">CONNECTING TO NERVEGEAR AINCRAD SERVER...</span>
+            </div>
+            <div class="link-start-loader">
+                <div class="loader-bar-fill" id="linkStartProgress"></div>
+            </div>
+            <button type="button" id="skipLinkStartBtn" class="link-start-skip-btn">
+                <span>VÀO AINCRAD NGAY (SKIP)</span> <i class="fa-solid fa-angles-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Interactive SAO Sword Slash & Crystal Burst Canvas -->
+    <canvas id="saoSlashCanvas" class="sao-slash-canvas"></canvas>
+    
+    <!-- Custom SAO Cursor Glow Follower -->
+    <div id="saoCursorGlow" class="sao-cursor-glow"></div>
+
+    <!-- Kirito & Asuna Aincrad Background Wallpaper -->
+    <div class="sao-wallpaper-bg"></div>
+    <div class="sao-vignette-overlay"></div>
+    <div class="sao-grid-bg"></div>
+    <div class="sao-glow-cyan"></div>
+    <div class="sao-glow-blue"></div>
+
+    <div class="sao-container">
+        <!-- SAO Top System HUD Bar -->
+        <header class="sao-header">
+            <!-- Left: SAO Logo & Server Region -->
+            <div class="sao-brand">
+                <div class="sao-crystal-frame">
+                    <img src="/static/sao_logo.jpg" alt="SAO Crystal" class="sao-crystal-img">
+                </div>
+                <div class="sao-title-group">
+                    <div class="sao-sys-tag"><span class="live-dot"></span> AINCRAD FLOOR 75: COLLINIA // 12ms</div>
+                    <h1 class="sao-logo-text">SWORD ART <span>STREAM</span></h1>
+                    <div class="sao-sub-jp">ソードアート・ストリーム // VRMMORPG ENGINE</div>
+                </div>
+            </div>
+
+            <!-- Center: Authentic SAO Floating Menu Ring Tabs -->
+            <nav class="sao-nav-tabs">
+                <button type="button" class="sao-menu-tab active" data-target="questSection" title="Nhiệm vụ trích xuất dữ liệu">
+                    <div class="tab-icon-wrap"><i class="fa-solid fa-crosshairs"></i></div>
+                    <div class="tab-text-wrap">
+                        <span class="tab-main">QUEST</span>
+                        <span class="tab-sub">TRUY XUẤT</span>
+                    </div>
+                </button>
+                <button type="button" class="sao-menu-tab" data-target="inventorySection" title="Kho đồ vật phẩm đã lưu trữ">
+                    <div class="tab-icon-wrap"><i class="fa-solid fa-boxes-stacked"></i></div>
+                    <div class="tab-text-wrap">
+                        <span class="tab-main">INVENTORY</span>
+                        <span class="tab-sub">KHO LƯU TRỮ</span>
+                    </div>
+                    <span class="tab-counter-badge" id="tabInventoryCounter">0</span>
+                </button>
+                <button type="button" class="sao-menu-tab" data-target="characterConsole" title="Bảng thông số Phó Đoàn Trưởng Asuna">
+                    <div class="tab-icon-wrap"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div class="tab-text-wrap">
+                        <span class="tab-main">STATUS</span>
+                        <span class="tab-sub">ASUNA YUUKI</span>
+                    </div>
+                </button>
+            </nav>
+
+            <!-- Right: Link Start / SFX Controls & Player HUD -->
+            <div class="sao-header-right">
+                <div class="sao-header-actions">
+                    <button type="button" id="reLinkStartBtn" class="sao-hdr-btn" title="Chạy lại hoạt ảnh đăng nhập Link Start">
+                        <i class="fa-solid fa-power-off"></i> <span>LINK START</span>
+                    </button>
+                    <button type="button" id="saoSfxToggle" class="sao-hdr-btn active" title="Bật/Tắt âm thanh kiếm kỹ SAO">
+                        <i class="fa-solid fa-volume-high"></i> <span id="sfxStatusText">SFX: ON</span>
+                    </button>
+                </div>
+
+                <!-- Asuna Yuuki Player Status Bar -->
+                <div class="sao-player-hud">
+                    <div class="asuna-hud-avatar-wrap">
+                        <img src="/static/asuna_avatar.jpg" alt="Asuna Yuuki" class="asuna-hud-avatar">
+                        <div class="asuna-hud-ring"></div>
+                    </div>
+                    <div class="player-hud-body">
+                        <div class="player-meta">
+                            <div class="player-identity">
+                                <span class="player-name"><i class="fa-solid fa-feather-pointed"></i> ASUNA_YUUKI</span>
+                            </div>
+                            <div class="player-rank">
+                                <span class="player-lvl">LV. 99</span>
+                                <span class="sao-status-dot" title="Player Online"></span>
+                            </div>
+                        </div>
+                        <div class="sao-hp-container">
+                            <div class="sao-hp-bar">
+                                <div class="sao-hp-fill" style="width: 100%;"></div>
+                            </div>
+                            <div class="sao-hp-text">HP: 15,200 / 15,200 <span class="hp-status">[MAX]</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main SAO VRMMORPG Split Game Dashboard (2 Cột Cân Đối) -->
+        <main class="sao-main sao-game-layout">
+            
+            <!-- ============================================== -->
+            <!-- CỘT TRÁI: SAO CHARACTER & COMPANION CONSOLE     -->
+            <!-- ============================================== -->
+            <aside class="sao-col-left" id="characterConsole">
+                <!-- 1. Asuna Character Status Window -->
+                <div class="sao-game-window sao-character-card sao-tilt-card">
+                    <div class="card-tech-corners">
+                        <span class="corner tl"></span>
+                        <span class="corner tr"></span>
+                        <span class="corner bl"></span>
+                        <span class="corner br"></span>
+                    </div>
+
+                    <!-- Technical Window Title Bar -->
+                    <div class="window-title-bar">
+                        <div class="window-title">
+                            <i class="fa-solid fa-shield-cat"></i>
+                            <span>[ PROFILE // ASUNA YUUKI ]</span>
+                        </div>
+                        <div class="window-controls">
+                            <span class="w-ctrl">_</span>
+                            <span class="w-ctrl">□</span>
+                            <span class="w-ctrl">✕</span>
+                        </div>
+                    </div>
+
+                    <!-- Asuna Full-body Action Portrait -->
+                    <div class="char-portrait-container">
+                        <img src="/static/asuna_flash.jpg" alt="Asuna The Flash" class="char-portrait-img">
+                        <div class="char-blade-aura"></div>
+                        <div class="char-overlay-tag">
+                            <span class="guild-badge"><i class="fa-solid fa-shield-halved"></i> KNIGHTS OF THE BLOOD</span>
+                            <span class="title-sub">VICE COMMANDER</span>
+                        </div>
+                    </div>
+
+                    <!-- Character Attributes & Equipment Specs -->
+                    <div class="char-details-body">
+                        <div class="char-stat-grid">
+                            <div class="char-stat-item">
+                                <span class="stat-lbl">CLASS</span>
+                                <span class="stat-val text-cyan">RAPIER MASTER</span>
+                            </div>
+                            <div class="char-stat-item">
+                                <span class="stat-lbl">LEVEL</span>
+                                <span class="stat-val text-gold">LV. 99 [MAX]</span>
+                            </div>
+                            <div class="char-stat-item">
+                                <span class="stat-lbl">WEAPON</span>
+                                <span class="stat-val text-pink">LAMBENT LIGHT +40</span>
+                            </div>
+                            <div class="char-stat-item">
+                                <span class="stat-lbl">SWORD SKILL</span>
+                                <span class="stat-val text-cyan">LINEAR // STAR SPLASH</span>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Fullscreen Sword Skill Trigger -->
+                        <div class="char-skill-trigger">
+                            <button type="button" id="asunaSwordSkillBtn" class="sao-btn sao-btn-sword-skill" title="Kích hoạt hiệu ứng kiếm kỹ SAO toàn màn hình">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> <span>KÍCH HOẠT KIẾM KỸ: LINEAR</span>
+                            </button>
+                        </div>
+
+                        <!-- Multi-Form Selector Chips -->
+                        <div class="char-form-box">
+                            <div class="form-box-lbl"><i class="fa-solid fa-wand-magic"></i> CHUYỂN DẠNG ASUNA (FORM):</div>
+                            <div class="asuna-form-selector" id="asunaFormSelector">
+                                <button type="button" class="asuna-chip active" data-form="kob" title="Huyết Minh Kỵ Sĩ Đoàn (The Flash)">
+                                    <img src="/static/asuna_avatar.jpg" alt="The Flash" class="chip-avatar">
+                                    <span>THE FLASH (KoB)</span>
+                                </button>
+                                <button type="button" class="asuna-chip" data-form="stacia" title="Sáng Thế Thần Stacia">
+                                    <img src="/static/asuna_forms.jpg" alt="Goddess Stacia" class="chip-avatar">
+                                    <span>GODDESS STACIA</span>
+                                </button>
+                                <button type="button" class="asuna-chip" data-form="undine" title="ALO Undine Thủy Tộc Pháp Sư">
+                                    <img src="/static/asuna_flash.jpg" alt="Undine" class="chip-avatar">
+                                    <span>UNDINE HEALER</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Interactive Asuna Navi Companion Dialogue Console -->
+                <div class="sao-game-window asuna-companion-box sao-tilt-card" id="asunaCompanion">
+                    <div class="window-title-bar">
+                        <div class="window-title">
+                            <i class="fa-solid fa-comment-dots"></i>
+                            <span>[ NAVI COMPANION // ASUNA CHIBI ]</span>
+                        </div>
+                        <span class="floor-pill">FLOOR 75</span>
+                    </div>
+                    <div class="companion-box-body">
+                        <div class="asuna-mascot-avatar-frame" id="asunaMascotTrigger" title="Bấm vào Asuna để trò chuyện!">
+                            <img src="/static/asuna_chibi.jpg" alt="Asuna Companion" class="asuna-mascot-img">
+                            <div class="asuna-mascot-aura"></div>
+                            <div class="asuna-action-indicator"><i class="fa-solid fa-feather-pointed"></i></div>
+                        </div>
+                        <div class="asuna-speech-bubble" id="asunaSpeechBubble">
+                            <div class="bubble-speaker">ASUNA YUUKI:</div>
+                            <div class="bubble-text" id="asunaSpeechText">
+                                "Link Start! Asuna sẵn sàng hỗ trợ bạn trích xuất video & ảnh album chất lượng gốc!"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ============================================== -->
+            <!-- CỘT PHẢI: SAO QUEST TRANSMISSION & INVENTORY    -->
+            <!-- ============================================== -->
+            <section class="sao-col-right">
+                
+                <!-- 1. SAO QUEST TRANSMISSION WINDOW -->
+                <div class="sao-game-window sao-quest-window sao-tilt-card" id="questSection">
+                    <div class="card-tech-corners">
+                        <span class="corner tl"></span>
+                        <span class="corner tr"></span>
+                        <span class="corner bl"></span>
+                        <span class="corner br"></span>
+                    </div>
+
+                    <!-- Window Header -->
+                    <div class="window-title-bar">
+                        <div class="window-title">
+                            <i class="fa-solid fa-crosshairs"></i>
+                            <span>[ QUEST WINDOW // AINCRAD MEDIA TRANSMITTER ]</span>
+                        </div>
+                        <div class="window-status-tag">
+                            <span class="status-pulse-dot"></span>
+                            <span>TRANSMISSION READY</span>
+                        </div>
+                        <div class="window-controls">
+                            <span class="w-ctrl">_</span>
+                            <span class="w-ctrl">□</span>
+                            <span class="w-ctrl">✕</span>
+                        </div>
+                    </div>
+
+                    <div class="quest-window-body">
+                        <!-- Quest Realm Platform Selector Pills -->
+                        <div class="quest-realm-header">
+                            <span class="realm-lbl"><i class="fa-solid fa-satellite-dish"></i> TARGET MEDIA REALMS:</span>
+                            <div class="sao-portal-pills">
+                                <div class="sao-pill" data-platform="instagram" title="Instagram (Video & Album Ảnh)">
+                                    <div class="pill-dot"></div>
+                                    <i class="fa-brands fa-instagram"></i>
+                                    <span>INSTAGRAM</span>
+                                    <small>PHOTO/REEL</small>
+                                </div>
+                                <div class="sao-pill" data-platform="youtube" title="YouTube Video & Music">
+                                    <div class="pill-dot"></div>
+                                    <i class="fa-brands fa-youtube"></i>
+                                    <span>YOUTUBE</span>
+                                    <small>4K/SOUND</small>
+                                </div>
+                                <div class="sao-pill" data-platform="tiktok" title="TikTok Video không watermark">
+                                    <div class="pill-dot"></div>
+                                    <i class="fa-brands fa-tiktok"></i>
+                                    <span>TIKTOK</span>
+                                    <small>NO LOGO</small>
+                                </div>
+                                <div class="sao-pill" data-platform="douyin" title="Douyin HD Video">
+                                    <div class="pill-dot"></div>
+                                    <i class="fa-solid fa-music"></i>
+                                    <span>DOUYIN</span>
+                                    <small>SHORT VIDEO</small>
+                                </div>
+                                <div class="sao-pill" data-platform="facebook" title="Facebook Watch & Reels">
+                                    <div class="pill-dot"></div>
+                                    <i class="fa-brands fa-facebook"></i>
+                                    <span>FACEBOOK</span>
+                                    <small>WATCH/REELS</small>
+                                </div>
+                                <div class="sao-pill" data-platform="x" title="X (Twitter) Media">
+                                    <div class="pill-dot"></div>
+                                    <i class="fa-brands fa-x-twitter"></i>
+                                    <span>X / TWITTER</span>
+                                    <small>CLIP/FEED</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SAO Quest Input Bar -->
+                        <div class="sao-input-container">
+                            <div class="sao-input-wrapper">
+                                <div class="sao-input-main-field">
+                                    <div class="sao-input-icon" id="inputPlatformIcon">
+                                        <i class="fa-solid fa-crosshairs"></i>
+                                    </div>
+                                    <input type="text" id="videoUrlInput" placeholder="[ DÁN LINK: INSTAGRAM, YOUTUBE, TIKTOK, FACEBOOK... ]" autocomplete="off">
+                                    
+                                    <!-- Dấu X để xoá luôn URL -->
+                                    <button type="button" id="clearUrlBtn" class="sao-clear-btn hidden" title="Xoá sạch đường dẫn (Clear URL)">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="sao-input-actions">
+                                    <button type="button" id="pasteBtn" class="sao-btn sao-btn-secondary" title="Dán từ Clipboard">
+                                        <i class="fa-regular fa-clipboard"></i> <span>PASTE</span>
+                                    </button>
+                                    
+                                    <button type="button" id="fetchInfoBtn" class="sao-btn sao-btn-primary">
+                                        <i class="fa-solid fa-bolt-lightning"></i> <span>ANALYZE</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="urlError" class="sao-error hidden">
+                                <i class="fa-solid fa-triangle-exclamation"></i> <span id="errorText">Lỗi liên kết! Vui lòng nhập URL hợp lệ.</span>
+                            </div>
+                        </div>
+
+                        <!-- Loading Spinner (SAO VR Hexagon Pulse) -->
+                        <div id="loadingSkeleton" class="sao-skeleton hidden">
+                            <div class="sao-hex-spinner">
+                                <div class="hex-ring"></div>
+                                <i class="fa-solid fa-cube"></i>
+                            </div>
+                            <div class="skeleton-text">DECODING VRMMORPG DATA STREAM...</div>
+                        </div>
+
+                        <!-- Main Media Info & Options Card -->
+                        <div id="videoInfoCard" class="sao-info-card hidden">
+                            <div class="sao-info-layout">
+                                <!-- Left: Item Viewfinder -->
+                                <div class="sao-viewfinder">
+                                    <div class="viewfinder-frame">
+                                        <img id="videoThumbnail" src="" alt="Thumbnail">
+                                        <div class="vf-bracket top-left"></div>
+                                        <div class="vf-bracket top-right"></div>
+                                        <div class="vf-bracket bottom-left"></div>
+                                        <div class="vf-bracket bottom-right"></div>
+                                        <span id="videoDuration" class="sao-duration-tag">00:00</span>
+                                    </div>
+                                </div>
+
+                                <!-- Right: Item Stats & Details -->
+                                <div class="sao-details-pane">
+                                    <div class="sao-meta-badges">
+                                        <span id="platformBadge" class="sao-badge platform">
+                                            <i class="fa-solid fa-globe"></i> <span>MẠNG XÃ HỘI</span>
+                                        </span>
+                                        <span id="mediaTypeBadge" class="sao-badge media-type">
+                                            <i class="fa-solid fa-film"></i> <span>VIDEO</span>
+                                        </span>
+                                        <span id="viewCountTag" class="sao-badge views hidden">
+                                            <i class="fa-regular fa-heart"></i> <span id="viewCount">0</span>
+                                        </span>
+                                    </div>
+
+                                    <h3 id="videoTitle" class="sao-item-title">Item Title...</h3>
+                                    <div id="videoChannel" class="sao-item-author"><i class="fa-solid fa-circle-user"></i> Author</div>
+
+                                    <!-- Video Format Options (Chỉ hiện khi là Video) -->
+                                    <div id="videoFormatSection" class="sao-format-section">
+                                        <label class="sao-section-header"><i class="fa-solid fa-sliders"></i> CHỌN ĐỊNH DẠNG TẢI (RESOLUTION):</label>
+                                        <div class="sao-chips-grid">
+                                            <button class="sao-chip active" data-format="best">
+                                                <i class="fa-solid fa-crown"></i> GỐC TỐT NHẤT (BEST MP4)
+                                            </button>
+                                            <button class="sao-chip" data-format="1080p">
+                                                <i class="fa-solid fa-film"></i> 1080P FULL HD
+                                            </button>
+                                            <button class="sao-chip" data-format="720p">
+                                                <i class="fa-solid fa-video"></i> 720P HD
+                                            </button>
+                                            <button class="sao-chip" data-format="480p">
+                                                <i class="fa-solid fa-tv"></i> 480P SD
+                                            </button>
+                                            <button class="sao-chip audio" data-format="mp3">
+                                                <i class="fa-solid fa-music"></i> TRÍCH XUẤT MP3 (320KBPS)
+                                            </button>
+                                        </div>
+
+                                        <button id="startDownloadBtn" class="sao-btn sao-btn-action">
+                                            <i class="fa-solid fa-download"></i> <span>BẮT ĐẦU TẢI VỀ // EXECUTE</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PHOTO SELECTOR GRID (SAO INVENTORY: Chỉ hiện khi là bài viết Ảnh / Carousel) -->
+                            <div id="photoSelectorSection" class="sao-inventory-section hidden">
+                                <div class="inventory-header-bar">
+                                    <div class="inv-title">
+                                        <i class="fa-solid fa-boxes-stacked"></i>
+                                        <span>AINCRAD INVENTORY: ITEM SELECTOR</span>
+                                        <span class="inv-counter">[ <span id="selectedCount">0</span> / <span id="totalPhotosCount">0</span> ITEMS SELECTED ]</span>
+                                    </div>
+                                    <div class="inv-actions">
+                                        <button type="button" id="selectAllPhotosBtn" class="sao-btn sao-btn-xs">
+                                            <i class="fa-solid fa-check-double"></i> <span>CHỌN TẤT CẢ</span>
+                                        </button>
+                                        <button type="button" id="deselectAllPhotosBtn" class="sao-btn sao-btn-xs sao-btn-dim">
+                                            <i class="fa-solid fa-xmark"></i> <span>BỎ CHỌN</span>
+                                        </button>
+                                        <button type="button" id="downloadSelectedBtn" class="sao-btn sao-btn-primary sao-btn-sm">
+                                            <i class="fa-solid fa-file-zipper"></i> <span>TẢI CÁC ẢNH ĐÃ CHỌN (.ZIP)</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Grid of Photo Cards -->
+                                <div id="photoGrid" class="sao-photo-grid"></div>
+                            </div>
+                        </div>
+
+                        <!-- Download Progress Card -->
+                        <div id="progressCard" class="sao-progress-card hidden">
+                            <div class="progress-top">
+                                <h4 id="progressTitle"><i class="fa-solid fa-spinner fa-spin"></i> TRANSMITTING DATA PACKETS...</h4>
+                                <span id="progressPercent" class="sao-percent">0%</span>
+                            </div>
+                            <div class="sao-energy-track">
+                                <div id="progressBar" class="sao-energy-fill" style="width: 0%;"></div>
+                            </div>
+                            <div class="progress-metrics">
+                                <span><i class="fa-solid fa-gauge-high"></i> TỐC ĐỘ: <strong id="downloadSpeed">-- MB/s</strong></span>
+                                <span><i class="fa-regular fa-clock"></i> THỜI GIAN CÒN LẠI: <strong id="downloadEta">--</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Download Completed Card -->
+                        <div id="completedCard" class="sao-completed-card hidden">
+                            <div class="completed-badge-icon">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div class="completed-msg-tag">TRANSMISSION COMPLETE // ITEM READY</div>
+                            <h3 id="completedFileName" class="completed-title">item_downloaded.mp4</h3>
+                            <div class="completed-actions-row">
+                                <a id="directDownloadLink" href="#" class="sao-btn sao-btn-primary sao-btn-lg" download>
+                                    <i class="fa-solid fa-file-arrow-down"></i> <span>LƯU VỀ THIẾT BỊ // SAVE ITEM</span>
+                                </a>
+                                <button id="downloadAnotherBtn" class="sao-btn sao-btn-secondary">
+                                    <i class="fa-solid fa-rotate-right"></i> <span>TẢI TIẾP NỘI DUNG KHÁC</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. SAO STORAGE INVENTORY WINDOW (KHO ĐỒ & LỊCH SỬ TẢI) -->
+                <div class="sao-game-window sao-inventory-window sao-tilt-card" id="inventorySection">
+                    <div class="card-tech-corners">
+                        <span class="corner tl"></span>
+                        <span class="corner tr"></span>
+                        <span class="corner bl"></span>
+                        <span class="corner br"></span>
+                    </div>
+
+                    <!-- Window Header -->
+                    <div class="window-title-bar">
+                        <div class="window-title">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                            <span>[ INVENTORY BAG // LOCAL STORAGE ]</span>
+                        </div>
+                        <div class="window-status-tag">
+                            <span class="inv-slot-badge" id="historyCountBadge">0 ITEMS</span>
+                        </div>
+                        <div class="window-controls">
+                            <span class="w-ctrl">_</span>
+                            <span class="w-ctrl">□</span>
+                            <span class="w-ctrl">✕</span>
+                        </div>
+                    </div>
+
+                    <div class="inventory-window-body">
+                        <!-- Inventory Toolbar (Category Filters & Actions) -->
+                        <div class="inv-toolbar">
+                            <div class="inv-filter-tabs">
+                                <button type="button" class="inv-filter-chip active" data-filter="all">
+                                    <i class="fa-solid fa-layer-group"></i> <span>TẤT CẢ</span>
+                                </button>
+                                <button type="button" class="inv-filter-chip" data-filter="video">
+                                    <i class="fa-solid fa-film"></i> <span>VIDEO</span>
+                                </button>
+                                <button type="button" class="inv-filter-chip" data-filter="image">
+                                    <i class="fa-solid fa-image"></i> <span>HÌNH ẢNH</span>
+                                </button>
+                                <button type="button" class="inv-filter-chip" data-filter="audio">
+                                    <i class="fa-solid fa-music"></i> <span>ÂM THANH</span>
+                                </button>
+                            </div>
+                            <div class="inv-header-actions">
+                                <button id="clearAllHistoryBtn" class="sao-btn sao-btn-danger-xs" title="Xoá toàn bộ file trong lịch sử">
+                                    <i class="fa-solid fa-trash-can"></i> <span>XOÁ TẤT CẢ</span>
+                                </button>
+                                <button id="refreshHistoryBtn" class="sao-icon-btn" title="Làm mới"><i class="fa-solid fa-rotate"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Inventory Storage Items List -->
+                        <div id="downloadsHistoryList" class="sao-history-grid">
+                            <div class="empty-inventory">NO ITEMS IN LOCAL STORAGE // CHƯA CÓ FILE ĐƯỢC TẢI.</div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+
+        <!-- SAO System Footer -->
+        <footer class="sao-footer">
+            <div class="footer-hud-line"></div>
+            <p>SWORD ART STREAM • SAO VRMMORPG GAME INTERFACE SYSTEM (ASUNA & KIRITO EDITION) • POWERED BY YT-DLP, INSTALOADER & FFMPEG</p>
+        </footer>
+    </div>
+
+    <!-- SAO Photo Lightbox Modal -->
+    <div id="imageLightboxModal" class="sao-modal hidden">
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-window">
+            <div class="modal-tech-corners">
+                <span class="corner tl"></span>
+                <span class="corner tr"></span>
+                <span class="corner bl"></span>
+                <span class="corner br"></span>
+            </div>
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-eye"></i> ITEM VIEW: <span id="modalImgIndex">#01</span></div>
+                <button type="button" id="closeModalBtn" class="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <img id="lightboxImg" src="" alt="Enlarged Item">
+            </div>
+            <div class="modal-footer">
+                <a id="modalDownloadBtn" href="#" class="sao-btn sao-btn-primary sao-btn-sm" download>
+                    <i class="fa-solid fa-download"></i> <span>TẢI ẢNH NÀY (FULL RES)</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- SAO Bottom Undo Toast Notification (10s Countdown with Asuna Badge) -->
+    <div id="saoUndoToast" class="sao-undo-toast hidden">
+        <div class="toast-left-glow"></div>
+        <div class="toast-content">
+            <div class="toast-asuna-badge">
+                <img src="/static/asuna_avatar.jpg" alt="Asuna" class="toast-asuna-img">
+                <span class="toast-asuna-dot"></span>
+            </div>
+            <div class="toast-text-group">
+                <div class="toast-title" id="toastMsg">Đã xoá mục khỏi kho lưu trữ.</div>
+                <div class="toast-desc">Asuna: Đã lưu vào bộ nhớ tạm! Bạn có 10 giây để hoàn tác.</div>
+            </div>
+        </div>
+        <div class="toast-actions">
+            <button type="button" id="toastUndoBtn" class="sao-btn-undo" title="Khôi phục lại file">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>HOÀN TÁC</span>
+                <span class="countdown-badge" id="toastCountdown">10s</span>
+            </button>
+            <button type="button" id="toastCloseBtn" class="toast-dismiss-btn" title="Đóng thông báo">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="toast-progress-track">
+            <div id="toastProgressFill" class="toast-progress-fill"></div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

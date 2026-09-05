@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: sword-art-stream
+    runtime: docker
+    plan: free
+    region: singapore
+    envVars:
+      - key: PORT
+        value: 8000

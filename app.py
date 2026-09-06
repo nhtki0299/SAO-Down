@@ -579,9 +579,10 @@ def download_worker(task_id: str, raw_url: str, format_type: str, selected_indic
         if FFMPEG_DIR:
             ydl_opts['ffmpeg_location'] = FFMPEG_DIR
 
-        ydl_opts['http_headers'] = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-        }
+        if platform_info['id'] != 'youtube':
+            ydl_opts['http_headers'] = {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+            }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -697,11 +698,12 @@ def get_video_info(req: InfoRequest):
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
-        'extract_flat': False,
-        'http_headers': {
+        'extract_flat': False
+    }
+    if platform_info['id'] != 'youtube':
+        ydl_opts['http_headers'] = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
         }
-    }
     if FFMPEG_DIR:
         ydl_opts['ffmpeg_location'] = FFMPEG_DIR
     

@@ -1,9 +1,10 @@
 FROM python:3.10-slim
 
-# Install system dependencies (ffmpeg is essential for yt-dlp video/audio merging)
+# Install system dependencies (ffmpeg for media merging, nodejs for yt-dlp JS challenges)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
+    nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

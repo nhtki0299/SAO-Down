@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectAllPhotosBtn = document.getElementById('selectAllPhotosBtn');
     const deselectAllPhotosBtn = document.getElementById('deselectAllPhotosBtn');
     const downloadSelectedBtn = document.getElementById('downloadSelectedBtn');
+    const downloadSequentialBtn = document.getElementById('downloadSequentialBtn');
 
     // Lightbox Modal
     const imageLightboxModal = document.getElementById('imageLightboxModal');
@@ -391,13 +392,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (count === 0) {
             downloadSelectedBtn.classList.add('sao-btn-dim');
+            downloadSelectedBtn.disabled = true;
             downloadSelectedBtn.innerHTML = `<i class="fa-solid fa-file-zipper"></i> <span>CHƯA CHỌN ẢNH NÀO</span>`;
+
+            if (downloadSequentialBtn) {
+                downloadSequentialBtn.classList.add('sao-btn-dim');
+                downloadSequentialBtn.disabled = true;
+                downloadSequentialBtn.innerHTML = `<i class="fa-solid fa-images"></i> <span>TẢI LẦN LƯỢT TỪNG ẢNH</span>`;
+            }
         } else if (count === 1) {
             downloadSelectedBtn.classList.remove('sao-btn-dim');
-            downloadSelectedBtn.innerHTML = `<i class="fa-solid fa-download"></i> <span>TẢI 1 ẢNH ĐÃ CHỌN (.JPG)</span>`;
+            downloadSelectedBtn.disabled = false;
+            downloadSelectedBtn.innerHTML = `<i class="fa-solid fa-file-zipper"></i> <span>GỘP 1 ẢNH (.ZIP)</span>`;
+
+            if (downloadSequentialBtn) {
+                downloadSequentialBtn.classList.remove('sao-btn-dim');
+                downloadSequentialBtn.disabled = false;
+                downloadSequentialBtn.innerHTML = `<i class="fa-solid fa-download"></i> <span>TẢI 1 ẢNH GỐC (.JPG)</span>`;
+            }
         } else {
             downloadSelectedBtn.classList.remove('sao-btn-dim');
-            downloadSelectedBtn.innerHTML = `<i class="fa-solid fa-file-zipper"></i> <span>TẢI ${count} ẢNH ĐÃ CHỌN (.ZIP)</span>`;
+            downloadSelectedBtn.disabled = false;
+            downloadSelectedBtn.innerHTML = `<i class="fa-solid fa-file-zipper"></i> <span>GỘP ${count} ẢNH (.ZIP)</span>`;
+
+            if (downloadSequentialBtn) {
+                downloadSequentialBtn.classList.remove('sao-btn-dim');
+                downloadSequentialBtn.disabled = false;
+                downloadSequentialBtn.innerHTML = `<i class="fa-solid fa-images"></i> <span>TẢI LẦN LƯỢT ${count} ẢNH</span>`;
+            }
         }
     }
 
@@ -415,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSelectedCounter();
     });
 
-    // Download Selected Images
+    // Download Selected Images as ZIP
     downloadSelectedBtn.addEventListener('click', () => {
         if (selectedImageIndices.size === 0) {
             showError("Vui lòng chọn ít nhất 1 ảnh để tải về!");
@@ -429,6 +451,102 @@ document.addEventListener('DOMContentLoaded', () => {
             selected_indices: indices
         });
     });
+
+    // Sequential Photo Download (Tải lần lượt từng ảnh trực tiếp không nén ZIP)
+    let isSequentialDownloading = false;
+
+    if (downloadSequentialBtn) {
+        downloadSequentialBtn.addEventListener('click', downloadPhotosSequentially);
+    }
+
+    async function downloadPhotosSequentially() {
+        if (isSequentialDownloading) return;
+        if (!currentMediaData || !currentMediaData.images || currentMediaData.images.length === 0) return;
+
+        const indices = Array.from(selectedImageIndices);
+        if (indices.length === 0) {
+            showError("Vui lòng chọn ít nhất 1 ảnh để tải về!");
+            return;
+        }
+
+        const imagesToDownload = currentMediaData.images.filter(img => indices.includes(img.index));
+        if (imagesToDownload.length === 0) return;
+
+        isSequentialDownloading = true;
+        downloadSequentialBtn.disabled = true;
+        downloadSelectedBtn.disabled = true;
+        selectAllPhotosBtn.disabled = true;
+        deselectAllPhotosBtn.disabled = true;
+
+        const total = imagesToDownload.length;
+        const rawTitle = currentMediaData.title || "Instagram_Album";
+        const cleanTitle = rawTitle.replace(/[\\/*?:"<>|]/g, '').trim().substring(0, 45) || "SAO_Item";
+
+        try {
+            for (let i = 0; i < total; i++) {
+                const img = imagesToDownload[i];
+                const fileIndex = String(img.index || i + 1).padStart(2, '0');
+                const filename = `${cleanTitle}_${fileIndex}.jpg`;
+
+                downloadSequentialBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>ĐANG TẢI [${i + 1}/${total}] ẢNH...</span>`;
+
+                const downloadUrl = `/api/proxy_download_image?url=${encodeURIComponent(img.url)}&filename=${encodeURIComponent(filename)}&save_history=true`;
+                
+                try {
+                    const response = await fetch(downloadUrl);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    const tempLink = document.createElement('a');
+                    tempLink.href = blobUrl;
+                    tempLink.download = filename;
+                    tempLink.style.display = 'none';
+                    document.body.appendChild(tempLink);
+                    tempLink.click();
+                    document.body.removeChild(tempLink);
+
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+                } catch (fetchErr) {
+                    console.warn(`Lỗi fetch ảnh #${img.index}, chuyển sang link trực tiếp:`, fetchErr);
+                    const directLink = document.createElement('a');
+                    directLink.href = downloadUrl;
+                    directLink.download = filename;
+                    directLink.style.display = 'none';
+                    document.body.appendChild(directLink);
+                    directLink.click();
+                    document.body.removeChild(directLink);
+                }
+
+                // Nghỉ ngắn giữa các lượt tải để browser ghi nhận từng file độc lập
+                if (i < total - 1) {
+                    await new Promise(res => setTimeout(res, 500));
+                }
+            }
+
+            downloadSequentialBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>ĐÃ TẢI XONG ${total} ẢNH!</span>`;
+            await loadHistory();
+            if (window.playSwordSfx) window.playSwordSfx('complete');
+
+            setTimeout(() => {
+                isSequentialDownloading = false;
+                downloadSequentialBtn.disabled = false;
+                downloadSelectedBtn.disabled = false;
+                selectAllPhotosBtn.disabled = false;
+                deselectAllPhotosBtn.disabled = false;
+                updateSelectedCounter();
+            }, 3000);
+
+        } catch (err) {
+            showError(`Lỗi trong quá trình tải ảnh: ${err.message}`);
+            isSequentialDownloading = false;
+            downloadSequentialBtn.disabled = false;
+            downloadSelectedBtn.disabled = false;
+            selectAllPhotosBtn.disabled = false;
+            deselectAllPhotosBtn.disabled = false;
+            updateSelectedCounter();
+        }
+    }
 
     // Video Download Button
     startDownloadBtn.addEventListener('click', () => {

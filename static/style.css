@@ -3068,7 +3068,8 @@ body.theme-undine {
         justify-content: center;
     }
 
-    #downloadSelectedPhotosBtn {
+    #downloadSequentialBtn,
+    #downloadSelectedBtn {
         grid-column: span 2;
         min-height: 44px;
         justify-content: center;

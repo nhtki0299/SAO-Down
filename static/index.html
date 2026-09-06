@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=sao-pc-3456-v3">
+    <link rel="stylesheet" href="/static/style.css?v=sao-v4-seq-photos">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body class="theme-kob">
@@ -438,8 +438,11 @@
                                         <button type="button" id="deselectAllPhotosBtn" class="sao-btn sao-btn-xs sao-btn-dim">
                                             <i class="fa-solid fa-xmark"></i> <span>BỎ CHỌN</span>
                                         </button>
-                                        <button type="button" id="downloadSelectedBtn" class="sao-btn sao-btn-primary sao-btn-sm">
-                                            <i class="fa-solid fa-file-zipper"></i> <span>TẢI CÁC ẢNH ĐÃ CHỌN (.ZIP)</span>
+                                        <button type="button" id="downloadSequentialBtn" class="sao-btn sao-btn-primary sao-btn-sm" title="Tải lần lượt từng ảnh trực tiếp về máy không cần nén ZIP">
+                                            <i class="fa-solid fa-images"></i> <span>TẢI LẦN LƯỢT TỪNG ẢNH</span>
+                                        </button>
+                                        <button type="button" id="downloadSelectedBtn" class="sao-btn sao-btn-secondary sao-btn-sm" title="Gộp tất cả ảnh đã chọn thành 1 file .ZIP duy nhất">
+                                            <i class="fa-solid fa-file-zipper"></i> <span>GỘP FILE NÉN (.ZIP)</span>
                                         </button>
                                     </div>
                                 </div>
@@ -603,6 +606,6 @@
         </div>
     </div>
 
-    <script src="/static/app.js?v=sao-pc-3456-v3"></script>
+    <script src="/static/app.js?v=sao-v4-seq-photos"></script>
 </body>
 </html>

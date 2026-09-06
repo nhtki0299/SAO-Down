@@ -625,7 +625,7 @@ def read_root():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 @app.get("/api/proxy_download_image")
-def proxy_download_image(url: str, filename: Optional[str] = "sao_item.jpg"):
+def proxy_download_image(url: str, filename: Optional[str] = "sao_item.jpg", save_history: Optional[bool] = True):
     """Tải trực tiếp 1 ảnh về máy ngay lập tức không cần tạo background task"""
     if not url or not url.startswith("http"):
         raise HTTPException(status_code=400, detail="Invalid URL")
@@ -633,13 +633,26 @@ def proxy_download_image(url: str, filename: Optional[str] = "sao_item.jpg"):
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
     }
     try:
-        resp = requests.get(url, headers=headers, stream=True, timeout=25)
+        resp = requests.get(url, headers=headers, timeout=25)
         if resp.status_code != 200:
             raise HTTPException(status_code=400, detail="Cannot fetch image from source")
-        return StreamingResponse(
-            resp.iter_content(chunk_size=16384),
+            
+        safe_filename = re.sub(r'[\\/*?:"<>|]', '', filename).strip() if filename else "sao_item.jpg"
+        if not safe_filename:
+            safe_filename = "sao_item.jpg"
+            
+        if save_history:
+            filepath = os.path.join(DOWNLOAD_DIR, safe_filename)
+            try:
+                with open(filepath, 'wb') as f:
+                    f.write(resp.content)
+            except Exception as fe:
+                print(f"[Proxy Image Save]: {fe}")
+
+        return Response(
+            content=resp.content,
             media_type=resp.headers.get("content-type", "image/jpeg"),
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+            headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

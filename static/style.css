@@ -822,10 +822,12 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
    =================================================== */
 .sao-game-layout {
     display: grid;
-    grid-template-columns: 370px 1fr;
+    grid-template-columns: 360px minmax(0, 1fr);
     gap: 22px;
     align-items: start;
     margin-bottom: 28px;
+    width: 100%;
+    min-width: 0;
 }
 
 /* SAO Game Window Frame Base */
@@ -839,6 +841,8 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     overflow: hidden;
     margin-bottom: 22px;
     transition: var(--transition);
+    min-width: 0;
+    max-width: 100%;
 }
 
 .sao-game-window:hover {
@@ -854,6 +858,8 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     border-bottom: 1px solid rgba(0, 240, 255, 0.25);
     padding: 8px 16px;
     user-select: none;
+    min-width: 0;
+    gap: 10px;
 }
 
 .window-title {
@@ -866,6 +872,10 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     align-items: center;
     gap: 8px;
     text-shadow: 0 0 8px var(--sao-cyan-glow);
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .window-status-tag {
@@ -877,6 +887,7 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     font-weight: 700;
     letter-spacing: 1px;
     color: var(--sao-hp-green);
+    flex-shrink: 0;
 }
 
 .status-pulse-dot {
@@ -892,6 +903,7 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .w-ctrl {
@@ -944,6 +956,8 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     display: flex;
     flex-direction: column;
     gap: 0;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .sao-character-card {
@@ -1057,6 +1071,22 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
 .text-cyan { color: var(--sao-cyan); text-shadow: 0 0 8px var(--sao-cyan-glow); }
 .text-gold { color: var(--sao-amber); }
 .text-pink { color: var(--sao-asuna-pink); }
+
+.sao-tag-max {
+    font-family: var(--font-sao-hud);
+    font-size: 9px;
+    font-weight: 800;
+    background: rgba(255, 170, 0, 0.2);
+    border: 1px solid var(--sao-amber);
+    color: var(--sao-amber);
+    border-radius: 2px;
+    padding: 1px 5px;
+    letter-spacing: 0.8px;
+    vertical-align: middle;
+    display: inline-block;
+    margin-left: 4px;
+    text-shadow: 0 0 6px rgba(255, 170, 0, 0.4);
+}
 
 .char-skill-trigger {
     width: 100%;
@@ -1299,6 +1329,9 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     display: flex;
     flex-direction: column;
     gap: 0;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .quest-window-body {
@@ -1306,6 +1339,8 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     display: flex;
     flex-direction: column;
     gap: 20px;
+    min-width: 0;
+    max-width: 100%;
 }
 
 /* Realm Platform Selector Pills */
@@ -1313,6 +1348,8 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-width: 0;
+    width: 100%;
 }
 
 .realm-lbl {
@@ -1328,18 +1365,20 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
 
 .sao-portal-pills {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 8px;
+    width: 100%;
+    min-width: 0;
 }
 
 .sao-pill {
     background: rgba(8, 16, 36, 0.85);
     border: 1px solid var(--sao-border);
     border-radius: var(--radius-sm);
-    padding: 8px 10px;
+    padding: 8px 6px;
     font-family: var(--font-sao-hud);
     font-weight: 700;
-    font-size: 12px;
+    font-size: 11.5px;
     letter-spacing: 0.5px;
     color: var(--sao-text-muted);
     cursor: pointer;
@@ -1352,6 +1391,16 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     user-select: none;
     position: relative;
     text-align: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.sao-pill span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
 }
 
 .sao-pill i {
@@ -1374,6 +1423,11 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     font-size: 9px;
     color: var(--sao-text-dim);
     letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
 }
 
 .sao-pill:hover {
@@ -1401,6 +1455,8 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;
+    width: 100%;
 }
 
 .sao-input-wrapper {
@@ -1413,6 +1469,8 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     padding: 6px 12px;
     transition: var(--transition);
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    min-width: 0;
 }
 
 .sao-input-main-field {
@@ -1443,10 +1501,13 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 #videoUrlInput {
     flex: 1;
+    min-width: 0;
+    width: 100%;
     background: transparent;
     border: none;
     outline: none;
@@ -2114,6 +2175,9 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     display: flex;
     flex-direction: column;
     gap: 14px;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .inv-toolbar {
@@ -2124,6 +2188,8 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     gap: 12px;
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(0, 240, 255, 0.18);
+    min-width: 0;
+    width: 100%;
 }
 
 .inv-filter-tabs {
@@ -2131,6 +2197,7 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     align-items: center;
     gap: 6px;
     flex-wrap: wrap;
+    min-width: 0;
 }
 
 .inv-filter-chip {
@@ -2165,6 +2232,7 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .inv-slot-badge {
@@ -2176,19 +2244,30 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     border: 1px solid rgba(255, 170, 0, 0.4);
     padding: 2px 8px;
     border-radius: 2px;
+    flex-shrink: 0;
 }
 
 .sao-icon-btn {
-    background: transparent;
-    border: none;
+    background: rgba(10, 20, 42, 0.85);
+    border: 1px solid rgba(0, 240, 255, 0.25);
     color: var(--sao-text-dim);
-    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
     transition: var(--transition);
 }
 
 .sao-icon-btn:hover {
     color: var(--sao-cyan);
+    border-color: var(--sao-cyan);
+    background: rgba(0, 240, 255, 0.12);
     transform: rotate(180deg);
 }
 
@@ -2199,7 +2278,10 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     gap: 8px;
     max-height: 480px;
     overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 4px;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .sao-history-grid::-webkit-scrollbar {
@@ -2220,6 +2302,9 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     justify-content: space-between;
     gap: 12px;
     transition: var(--transition);
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .sao-history-item:hover {
@@ -2267,12 +2352,19 @@ a, button, input, select, .sao-pill, .sao-chip, .asuna-chip, .sao-menu-tab, .inv
     text-overflow: ellipsis;
     margin-bottom: 2px;
     color: #fff;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .file-meta {
     font-size: 11px;
     font-family: var(--font-sao-hud);
     color: var(--sao-text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .sao-history-actions {
@@ -3028,9 +3120,11 @@ body.theme-undine {
 
     .inv-header-actions {
         display: flex;
+        align-items: center;
         justify-content: space-between;
         width: 100%;
         gap: 8px;
+        box-sizing: border-box;
     }
 
     #clearAllHistoryBtn {
@@ -3044,6 +3138,7 @@ body.theme-undine {
         width: 38px;
         height: 38px;
         min-width: 38px;
+        flex-shrink: 0;
     }
 
     .sao-history-item {

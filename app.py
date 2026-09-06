@@ -7,7 +7,7 @@ import threading
 import zipfile
 from urllib.parse import urlparse
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
@@ -37,6 +37,14 @@ if FFMPEG_DIR:
     os.environ["PATH"] = FFMPEG_DIR + os.pathsep + os.environ.get("PATH", "")
 
 app = FastAPI(title="Sword Art Stream - Multi-Platform Media Downloader")
+
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 # Static files mapping
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -352,7 +360,10 @@ def download_worker(task_id: str, raw_url: str, format_type: str, selected_indic
                 'quiet': True,
                 'no_warnings': True,
                 'nocheckcertificate': True,
-                'outtmpl_na_placeholder': 'NA'
+                'outtmpl_na_placeholder': 'NA',
+                'hls_prefer_native': True,
+                'retries': 10,
+                'fragment_retries': 10
             }
         else:
             if format_type == "1080p":
@@ -373,7 +384,10 @@ def download_worker(task_id: str, raw_url: str, format_type: str, selected_indic
                 'quiet': True,
                 'no_warnings': True,
                 'nocheckcertificate': True,
-                'outtmpl_na_placeholder': 'NA'
+                'outtmpl_na_placeholder': 'NA',
+                'hls_prefer_native': True,
+                'retries': 10,
+                'fragment_retries': 10
             }
 
         if FFMPEG_DIR:

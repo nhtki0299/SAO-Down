@@ -638,21 +638,17 @@ def proxy_download_image(url: str, filename: Optional[str] = "sao_item.jpg", sav
             raise HTTPException(status_code=400, detail="Cannot fetch image from source")
             
         safe_filename = re.sub(r'[\\/*?:"<>|]', '', filename).strip() if filename else "sao_item.jpg"
-        if not safe_filename:
-            safe_filename = "sao_item.jpg"
-            
-        if save_history:
-            filepath = os.path.join(DOWNLOAD_DIR, safe_filename)
-            try:
-                with open(filepath, 'wb') as f:
-                    f.write(resp.content)
-            except Exception as fe:
-                print(f"[Proxy Image Save]: {fe}")
+        if not safe_filename.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
+            safe_filename += '.jpg'
 
-        return Response(
-            content=resp.content,
-            media_type=resp.headers.get("content-type", "image/jpeg"),
-            headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
+        filepath = os.path.join(DOWNLOAD_DIR, safe_filename)
+        with open(filepath, 'wb') as f:
+            f.write(resp.content)
+
+        return FileResponse(
+            path=filepath,
+            filename=safe_filename,
+            media_type="image/jpeg"
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

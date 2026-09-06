@@ -203,6 +203,183 @@ def get_instagram_media_info(shortcode: str) -> dict:
     except Exception as e:
         return {'error': str(e)}
 
+def get_tiktok_media_info(url: str) -> dict:
+    """Lấy thông tin và liên kết video/album ảnh không watermark từ TikTok / Douyin qua TikWM API"""
+    clean_url = extract_clean_url(url)
+    cache_key = f"tiktok_{clean_url}"
+    if cache_key in media_cache:
+        return media_cache[cache_key]
+
+    try:
+        api_url = f"https://www.tikwm.com/api/?url={requests.utils.quote(clean_url)}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+        }
+        resp = requests.get(api_url, headers=headers, timeout=15)
+        if resp.status_code != 200:
+            return {'error': f"TikWM API HTTP error {resp.status_code}"}
+        data = resp.json()
+        if data.get('code') != 0:
+            return {'error': data.get('msg') or "Không thể trích xuất dữ liệu TikTok"}
+        
+        d = data.get('data', {})
+        images_list = d.get('images', [])
+        is_images = bool(images_list and len(images_list) > 0)
+        
+        title = (d.get('title') or f"TikTok Media [{d.get('id')}]").split('\n')[0][:120].strip()
+        author_name = d.get('author', {}).get('nickname') or d.get('author', {}).get('unique_id') or "TikTok Creator"
+        
+        duration_sec = d.get('duration', 0)
+        if duration_sec:
+            duration_str = f"{duration_sec // 60}:{duration_sec % 60:02d}"
+        else:
+            duration_str = "Slide / Clip"
+            
+        images = []
+        if is_images:
+            for idx, img_url in enumerate(images_list):
+                images.append({
+                    'index': idx + 1,
+                    'url': img_url,
+                    'thumbnail': img_url,
+                    'is_video': False,
+                    'video_url': None
+                })
+        
+        res = {
+            'id': d.get('id'),
+            'title': title,
+            'channel': f"@{author_name}",
+            'thumbnail': d.get('cover') or d.get('origin_cover') or "",
+            'duration': f"Album ({len(images)} ảnh)" if is_images else duration_str,
+            'view_count': d.get('play_count') or d.get('digg_count') or 0,
+            'play_url': d.get('play'),
+            'wm_play_url': d.get('wmplay'),
+            'music_url': d.get('music'),
+            'is_image': is_images,
+            'is_carousel': is_images and len(images) > 1,
+            'image_count': len(images) if is_images else 0,
+            'images': images,
+            'size': d.get('size', 0)
+        }
+        media_cache[cache_key] = res
+        return res
+    except Exception as e:
+        return {'error': str(e)}
+
+def download_tiktok_media(task_id: str, clean_url: str, format_type: str, selected_indices: Optional[List[int]] = None):
+    cache_key = f"tiktok_{clean_url}"
+    data = media_cache.get(cache_key) or get_tiktok_media_info(clean_url)
+    if not data or data.get('error'):
+        raise Exception(data.get('error') if data else "Không tìm thấy dữ liệu từ TikTok")
+    
+    title = data.get('title') or f"TikTok_{data.get('id')}"
+    safe_title = re.sub(r'[\\/*?:"<>|]', '', title)[:80].strip() or f"TikTok_{data.get('id')}"
+    
+    tasks[task_id].update({
+        "status": "downloading",
+        "progress": 5.0,
+        "speed": "Starting...",
+        "eta": "Calculating..."
+    })
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        'Referer': 'https://www.tiktok.com/'
+    }
+    
+    # 1. Nếu là bài đăng dạng album ảnh
+    if data.get('is_image') and data.get('images'):
+        all_images = data['images']
+        if selected_indices and len(selected_indices) > 0:
+            images = [img for img in all_images if img.get('index') in selected_indices]
+            if not images:
+                images = all_images
+        else:
+            images = all_images
+            
+        if format_type == "image_original" or len(images) == 1:
+            img_url = images[0]['url']
+            final_filename = f"{safe_title} [tiktok_img_{data.get('id')}].jpg"
+            filepath = os.path.join(DOWNLOAD_DIR, final_filename)
+            resp = requests.get(img_url, headers=headers, timeout=25)
+            with open(filepath, 'wb') as f:
+                f.write(resp.content)
+        else:
+            final_filename = f"{safe_title} [tiktok_album_{data.get('id')}].zip"
+            filepath = os.path.join(DOWNLOAD_DIR, final_filename)
+            with zipfile.ZipFile(filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                total_imgs = len(images)
+                for idx, img in enumerate(images):
+                    resp = requests.get(img['url'], headers=headers, timeout=25)
+                    if resp.status_code == 200:
+                        img_name = f"{safe_title}_{img.get('index', idx+1):02d}.jpg"
+                        zipf.writestr(img_name, resp.content)
+                    tasks[task_id].update({
+                        "progress": round((idx + 1) / total_imgs * 90.0, 1),
+                        "speed": "Zipping photos...",
+                        "eta": f"{total_imgs - idx - 1} left"
+                    })
+                    
+        tasks[task_id].update({
+            "status": "completed",
+            "progress": 100.0,
+            "speed": "0 MB/s",
+            "eta": "0s",
+            "filename": final_filename,
+            "title": title,
+            "filesize": os.path.getsize(filepath) if os.path.exists(filepath) else 0
+        })
+        return
+
+    # 2. Nếu chọn trích xuất âm thanh MP3
+    if format_type == "mp3" and data.get('music_url'):
+        download_url = data['music_url']
+        final_filename = f"{safe_title} [tiktok_sound_{data.get('id')}].mp3"
+    else:
+        download_url = data.get('play_url') or data.get('wm_play_url')
+        if not download_url:
+            raise Exception("Không tìm thấy liên kết tải video từ TikTok")
+        final_filename = f"{safe_title} [tiktok_{data.get('id')}].mp4"
+        
+    filepath = os.path.join(DOWNLOAD_DIR, final_filename)
+    
+    with requests.get(download_url, headers=headers, stream=True, timeout=30) as r:
+        r.raise_for_status()
+        total_size = int(r.headers.get('content-length', 0)) or data.get('size', 0)
+        downloaded = 0
+        start_time = time.time()
+        
+        with open(filepath, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=65536):
+                if chunk:
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    elapsed = time.time() - start_time
+                    if elapsed > 0 and total_size > 0:
+                        speed = downloaded / elapsed
+                        speed_str = f"{speed / (1024 * 1024):.2f} MB/s"
+                        percent = (downloaded / total_size) * 100.0
+                        eta = int((total_size - downloaded) / speed) if speed > 0 else 0
+                        tasks[task_id].update({
+                            "status": "downloading",
+                            "progress": round(min(percent, 99.0), 1),
+                            "speed": speed_str,
+                            "eta": f"{eta}s",
+                            "downloaded_bytes": downloaded,
+                            "total_bytes": total_size
+                        })
+                        
+    tasks[task_id].update({
+        "status": "completed",
+        "progress": 100.0,
+        "speed": "0 MB/s",
+        "eta": "0s",
+        "filename": final_filename,
+        "title": title,
+        "filesize": os.path.getsize(filepath) if os.path.exists(filepath) else 0
+    })
+
 class DownloadRequest(BaseModel):
     url: str
     format_type: str = "best" # "best", "1080p", "720p", "480p", "mp3", "image_original", "image_zip", "image_selected"
@@ -335,6 +512,15 @@ def download_worker(task_id: str, raw_url: str, format_type: str, selected_indic
             if shortcode:
                 download_instagram_images(task_id, shortcode, format_type, selected_indices)
                 return
+
+        # Nếu là TikTok hoặc Douyin
+        platform_info = detect_platform(url)
+        if platform_info['id'] in ['tiktok', 'douyin']:
+            try:
+                download_tiktok_media(task_id, url, format_type, selected_indices)
+                return
+            except Exception as tt_err:
+                print(f"[TikTok Direct Fallback]: {tt_err}, trying yt-dlp fallback...")
 
         filename_holder = {"filename": None}
 
@@ -486,7 +672,26 @@ def get_video_info(req: InfoRequest):
                     "images": ig_data.get('images', [])
                 }
 
-    # 2. Xử lý video thông thường với yt-dlp
+    # 2. Kiểm tra TikTok / Douyin qua TikWM API
+    if platform_info['id'] in ['tiktok', 'douyin']:
+        tt_data = get_tiktok_media_info(clean_url)
+        if not tt_data.get('error'):
+            return {
+                "title": tt_data.get('title') or f"TikTok Video [{tt_data.get('id')}]",
+                "channel": tt_data.get('channel') or "TikTok Creator",
+                "thumbnail": tt_data.get('thumbnail') or "",
+                "duration": f"Album ({tt_data['image_count']} ảnh)" if tt_data.get('is_image') else tt_data.get('duration', 'Short Clip'),
+                "view_count": tt_data.get('view_count') or 0,
+                "available_heights": [] if tt_data.get('is_image') else ["HD (No Watermark)"],
+                "platform": platform_info,
+                "clean_url": clean_url,
+                "is_image": tt_data.get('is_image', False),
+                "is_carousel": tt_data.get('is_carousel', False),
+                "image_count": tt_data.get('image_count', 0),
+                "images": tt_data.get('images', [])
+            }
+
+    # 3. Xử lý video thông thường với yt-dlp
     ydl_opts = {
         'skip_download': True,
         'quiet': True,
